@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log/slog"
 	"net"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -44,6 +46,28 @@ func main() {
 			"error", err)
 	} else {
 		slog.Info("successfully connected to google on port 81")
+	}
+
+	listener, err := net.Listen(protocolName[protocolTCP], ":8080")
+	if err != nil {
+		panic(err)
+	}
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		tmpl, err := template.New("site.html.go.tmpl").ParseFiles("site.html.go.tmpl")
+		if err != nil {
+			panic(err)
+		}
+
+		if err := tmpl.Execute(w, nil); err != nil {
+			panic(err)
+		}
+	})
+
+	slog.Info("listening on port 8080")
+
+	if err := http.Serve(listener, nil); err != nil {
+		panic(err)
 	}
 }
 
