@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net"
@@ -8,6 +9,10 @@ import (
 	"strconv"
 	"text/template"
 	"time"
+
+	"connectrpc.com/connect"
+	willitsuitev1 "github.com/kosamson/willitsuite/gen/proto/v1"
+	"github.com/kosamson/willitsuite/gen/proto/v1/willitsuitev1connect"
 )
 
 type protocol int
@@ -18,10 +23,16 @@ const (
 	protocolUDP
 )
 
-var inputProtocol = map[string]protocol{
+var textInputProtocol = map[string]protocol{
 	"ip":  protocolIP,
 	"tcp": protocolTCP,
 	"udp": protocolUDP,
+}
+
+var protoInputProtocol = map[willitsuitev1.Protocol]protocol{
+	willitsuitev1.Protocol_PROTOCOL_IP:  protocolIP,
+	willitsuitev1.Protocol_PROTOCOL_TCP: protocolTCP,
+	willitsuitev1.Protocol_PROTOCOL_UDP: protocolUDP,
 }
 
 var protocolName = map[protocol]string{
@@ -31,6 +42,37 @@ var protocolName = map[protocol]string{
 }
 
 const dialTimeout time.Duration = 3 * time.Second
+
+type WillitSuiteServer struct{}
+
+func (ws *WillitSuiteServer) Connect(
+	ctx context.Context,
+	req *connect.Request[willitsuitev1.ConnectRequest],
+) (*connect.Response[willitsuitev1.ConnectResponse], error) {
+	slog.InfoContext(ctx, "received request")
+
+	var status string
+
+	protocol, ok := protoInputProtocol[req.Msg.GetProtocol()]
+	if !ok {
+		return nil, connect.NewError(
+			connect.CodeInvalidArgument,
+			fmt.Errorf("invalid protocol: %s", req.Msg.GetProtocol()),
+		)
+	}
+
+	if err := canConnect(protocol, req.Msg.GetAddress(), int(req.Msg.GetPort())); err != nil {
+		status = fmt.Sprintf("failed to connect: %s", err)
+	} else {
+		status = "successfully connected"
+	}
+
+	slog.InfoContext(ctx, "sending response")
+
+	return connect.NewResponse(&willitsuitev1.ConnectResponse{
+		Status: status,
+	}), nil
+}
 
 func main() {
 	//	if err := canConnect(protocolIP, "127.0.0.1", -1); err != nil {
@@ -59,6 +101,11 @@ func main() {
 		panic(err)
 	}
 
+	srv := &WillitSuiteServer{}
+	path, handler := willitsuitev1connect.NewWillitSuiteServiceHandler(srv)
+
+	http.Handle(path, handler)
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		slog.InfoContext(ctx, "received request")
@@ -80,7 +127,7 @@ func main() {
 		var status string
 
 		if addressValue != "" || portValue != "" {
-			protocol, ok := inputProtocol[protocolValue]
+			protocol, ok := textInputProtocol[protocolValue]
 			if !ok {
 				status = "invalid protocol"
 			}

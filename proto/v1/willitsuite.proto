@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package proto.v1;
+
+option go_package = "github.com/kosamson/willitsuite/gen/proto/v1;willitsuitev1";
+
+enum Protocol {
+  PROTOCOL_UNSPECIFIED = 0;
+  PROTOCOL_IP = 1;
+  PROTOCOL_TCP = 2;
+  PROTOCOL_UDP = 3;
+}
+
+message ConnectRequest {
+  Protocol protocol = 1;
+  string address = 2;
+  int32 port = 3;
+}
+
+message ConnectResponse {
+  string status = 1;
+}
+
+service WillitSuiteService {
+  rpc Connect(ConnectRequest) returns (ConnectResponse) {}
+}
