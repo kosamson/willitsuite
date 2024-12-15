@@ -25,14 +25,14 @@ var protocolName = map[protocol]string{
 const dialTimeout time.Duration = 3 * time.Second
 
 func main() {
-	if err := connect(protocolTCP, "google.com", 80); err != nil {
+	if err := canConnect(protocolTCP, "google.com", 80); err != nil {
 		slog.Error("failed to connect to google on port 80",
 			"error", err)
 	} else {
 		slog.Info("successfully connected to google on port 80")
 	}
 
-	if err := connect(protocolTCP, "google.com", 81); err != nil {
+	if err := canConnect(protocolTCP, "google.com", 81); err != nil {
 		slog.Error("failed to connect to google on port 81",
 			"error", err)
 	} else {
@@ -40,8 +40,11 @@ func main() {
 	}
 }
 
-// for ip, set port to -1
-func connect(protocol protocol, address string, port int) error {
+// Asserts whether the host running this application
+// can connect to the specified address (optionally on the specified port).
+//
+// For ip protocol, set port to -1.
+func canConnect(protocol protocol, address string, port int) error {
 	if port > 0 {
 		address = address + ":" + strconv.Itoa(port)
 	}
