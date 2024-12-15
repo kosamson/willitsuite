@@ -74,26 +74,29 @@ func main() {
 
 		var status string
 
-		protocol, ok := inputProtocol[protocolValue]
-		if !ok {
-			status = "invalid protocol"
-		}
-
-		port, err := strconv.Atoi(portValue)
-		if err != nil {
-			status = "invalid port value"
-		}
-
-		if status == "" {
-			if err = canConnect(protocol, addressValue, port); err != nil {
-				status = fmt.Sprintf("failed to connect: %s", err)
-			} else {
-				status = "successfully connected"
+		if addressValue != "" || portValue != "" {
+			protocol, ok := inputProtocol[protocolValue]
+			if !ok {
+				status = "invalid protocol"
 			}
-		}
 
-		slog.InfoContext(ctx, "connection tested",
-			"status", status)
+			port, err := strconv.Atoi(portValue)
+			if err != nil {
+				status = "invalid port value"
+			}
+
+			if status == "" {
+				if err = canConnect(protocol, addressValue, port); err != nil {
+					status = fmt.Sprintf("failed to connect: %s", err)
+				} else {
+					status = "successfully connected"
+				}
+			}
+
+			slog.InfoContext(ctx, "connection tested",
+				"status", status)
+
+		}
 
 		connectData := struct {
 			Status string
