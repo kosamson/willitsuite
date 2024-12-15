@@ -43,7 +43,7 @@ func main() {
 // Asserts whether the host running this application
 // can connect to the specified address (optionally on the specified port).
 //
-// For ip protocol, set port to -1.
+// For IP protocol, set port to -1.
 func canConnect(protocol protocol, address string, port int) error {
 	if port > 0 {
 		address = address + ":" + strconv.Itoa(port)
