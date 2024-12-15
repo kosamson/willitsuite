@@ -8,14 +8,14 @@
     <form>
       <label for="protocol">Protocol</label><br>
       <select name="protocol" id="protocol">
-        <option value="ip">IP</option>
-        <option value="tcp" selected=true>TCP</option>
-        <option value="udp">UDP</option>
+        <option value="ip" {{ if eq .InputProtocol "ip" }}selected=true{{ end }}>IP</option>
+        <option value="tcp" {{ if or (eq .InputProtocol "") (eq .InputProtocol "tcp") }}selected=true{{ end }}>TCP</option>
+        <option value="udp" {{ if eq .InputProtocol "udp" }}selected=true{{ end }}>UDP</option>
       </select><br>
       <label for="address">Address</label><br>
-      <input type="text" id="address" name="address"><br>
+      <input type="text" id="address" name="address" value="{{ .InputAddress }}"><br>
       <label for="port">Port</label><br>
-      <input type="text" id="port" name="port"><br>
+      <input type="text" id="port" name="port" value="{{ .InputPort }}"><br>
 
       <input type="submit" value="Submit"><br>
 

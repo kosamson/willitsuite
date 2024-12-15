@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"log/slog"
 	"net"
 	"net/http"
 	"strconv"
+	"text/template"
 	"time"
 )
 
@@ -69,6 +69,11 @@ func main() {
 		}
 
 		protocolValue := r.FormValue("protocol")
+
+		if protocolValue == "" {
+			protocolValue = "tcp"
+		}
+
 		addressValue := r.FormValue("address")
 		portValue := r.FormValue("port")
 
@@ -99,9 +104,15 @@ func main() {
 		}
 
 		connectData := struct {
-			Status string
+			InputProtocol string
+			InputAddress  string
+			InputPort     string
+			Status        string
 		}{
-			status,
+			InputProtocol: protocolValue,
+			InputAddress:  addressValue,
+			InputPort:     portValue,
+			Status:        status,
 		}
 
 		if err := tmpl.Execute(w, connectData); err != nil {
