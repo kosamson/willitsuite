@@ -17,7 +17,7 @@ const (
 )
 
 var protocolName = map[protocol]string{
-	protocolIP:  "ip",
+	protocolIP:  "ip:1",
 	protocolTCP: "tcp",
 	protocolUDP: "udp",
 }
@@ -25,6 +25,13 @@ var protocolName = map[protocol]string{
 const dialTimeout time.Duration = 3 * time.Second
 
 func main() {
+	if err := canConnect(protocolIP, "127.0.0.1", -1); err != nil {
+		slog.Error("failed to ping localhost",
+			"error", err)
+	} else {
+		slog.Info("successfully pinged localhost")
+	}
+
 	if err := canConnect(protocolTCP, "google.com", 80); err != nil {
 		slog.Error("failed to connect to google on port 80",
 			"error", err)
