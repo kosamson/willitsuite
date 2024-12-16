@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 <html>
   <head>
   <title>WillitSuite</title>
@@ -8,21 +9,23 @@
     <form>
       <label for="protocol">Protocol</label><br>
       <select name="protocol" id="protocol">
-        <option value="ip" {{ if eq .InputProtocol "ip" }}selected=true{{ end }}>IP</option>
-        <option value="tcp" {{ if or (eq .InputProtocol "") (eq .InputProtocol "tcp") }}selected=true{{ end }}>TCP</option>
-        <option value="udp" {{ if eq .InputProtocol "udp" }}selected=true{{ end }}>UDP</option>
+        <option value="ip">IP</option>
+        <option value="tcp" selected=true>TCP</option>
+        <option value="udp">UDP</option>
       </select><br>
       <label for="address">Address</label><br>
-      <input type="text" id="address" name="address" value="{{ .InputAddress }}"><br>
+      <input type="text" id="address" name="address" value="google.com"><br>
       <label for="port">Port</label><br>
-      <input type="text" id="port" name="port" value="{{ .InputPort }}"><br>
+      <input type="text" id="port" name="port" value="443"><br>
 
-      <input type="submit" value="Submit"><br>
+      <div>
+        <button hx-post="/connect" hx-target="#connect-results" hx-swap="afterbegin" hx-indicator="#indicator">
+          Test Connection
+        </button>
+        <img id="indicator" class="htmx-indicator" src="https://github.com/SamHerbert/SVG-Loaders/blob/master/svg-loaders/rings.svg"/>
+      </div>
 
-      {{if .Status}}
-      <h2>Output</h2>
-      <text>{{ .Status }}</text>
-      {{- end}}
+      <div id="connect-results"></div>
     </form>
   </body>
 </html>

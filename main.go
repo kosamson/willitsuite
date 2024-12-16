@@ -49,7 +49,8 @@ func (ws *WillitSuiteServer) Connect(
 	ctx context.Context,
 	req *connect.Request[willitsuitev1.ConnectRequest],
 ) (*connect.Response[willitsuitev1.ConnectResponse], error) {
-	slog.InfoContext(ctx, "received request")
+	slog.InfoContext(ctx, "received request",
+		"connect.request", req.Msg)
 
 	var status string
 
@@ -106,14 +107,17 @@ func main() {
 
 	http.Handle(path, handler)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("POST /connect", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		slog.InfoContext(ctx, "received request")
 
-		tmpl, err := template.New("site.html.go.tmpl").ParseFiles("site.html.go.tmpl")
-		if err != nil {
-			panic(err)
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "failed to parse form data", http.StatusNotAcceptable)
+
+			return
 		}
+
+		slog.InfoContext(ctx, "received ui connect request",
+			"form.values", r.PostForm)
 
 		protocolValue := r.FormValue("protocol")
 
@@ -147,22 +151,24 @@ func main() {
 
 			slog.InfoContext(ctx, "connection tested",
 				"status", status)
-
 		}
 
-		connectData := struct {
-			InputProtocol string
-			InputAddress  string
-			InputPort     string
-			Status        string
-		}{
-			InputProtocol: protocolValue,
-			InputAddress:  addressValue,
-			InputPort:     portValue,
-			Status:        status,
+		if _, err := w.Write([]byte("<p>" + status + "</p>")); err != nil {
+			slog.ErrorContext(ctx, "failed to write response",
+				"error", err)
+		}
+	})
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		slog.InfoContext(ctx, "received request")
+
+		tmpl, err := template.New("site.html.go.tmpl").ParseFiles("site.html.go.tmpl")
+		if err != nil {
+			panic(err)
 		}
 
-		if err := tmpl.Execute(w, connectData); err != nil {
+		if err := tmpl.Execute(w, nil); err != nil {
 			panic(err)
 		}
 
